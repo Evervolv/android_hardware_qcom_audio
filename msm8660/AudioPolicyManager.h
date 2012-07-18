@@ -55,7 +55,7 @@ public:
         // "future" device selection (fromCache == false) when called from a context
         //  where conditions are changing (setDeviceConnectionState(), setPhoneState()...) AND
         //  before updateDeviceForStrategy() is called.
-        virtual uint32_t getDeviceForStrategy(routing_strategy strategy, bool fromCache = true);
+        virtual audio_devices_t getDeviceForStrategy(routing_strategy strategy, bool fromCache = true);
 
         virtual audio_io_handle_t getSession(AudioSystem::stream_type stream,
                                             uint32_t format,
@@ -79,11 +79,11 @@ protected:
         virtual bool a2dpUsedForSonification() const { return true; }
 #endif
         // change the route of the specified output
-        void setOutputDevice(audio_io_handle_t output, uint32_t device, bool force = false, int delayMs = 0);
+        void setOutputDevice(audio_io_handle_t output, audio_devices_t device, bool force = false, int delayMs = 0);
         // check that volume change is permitted, compute and send new volume to audio hardware
-        status_t checkAndSetVolume(int stream, int index, audio_io_handle_t output, uint32_t device, int delayMs = 0, bool force = false);
+        status_t checkAndSetVolume(int stream, int index, audio_io_handle_t output, audio_devices_t device, int delayMs = 0, bool force = false);
         // select input device corresponding to requested audio source
-        virtual uint32_t getDeviceForInputSource(int inputSource);
+        virtual audio_devices_t getDeviceForInputSource(int inputSource);
         // Mute or unmute the stream on the specified output
         void setStreamMute(int stream, bool on, audio_io_handle_t output, int delayMs = 0);
         status_t stopInput(audio_io_handle_t input);

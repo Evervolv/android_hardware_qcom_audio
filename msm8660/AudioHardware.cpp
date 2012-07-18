@@ -1027,7 +1027,11 @@ status_t AudioHardware::setMicMute_nosync(bool state)
             ALOGE(" unknown voice stream");
             return -1;
         }
+#ifdef QCOM_VOIP
         msm_set_voice_tx_mute_ext(mMicMute,session_id);
+#else
+        msm_set_voice_tx_mute(mMicMute);
+#endif
     }
     return NO_ERROR;
 }
@@ -1262,7 +1266,11 @@ status_t AudioHardware::setVoiceVolume(float v)
     ALOGD("setVoiceVolume(%f)\n", v);
     ALOGI("Setting in-call volume to %d (available range is 5(MIN VOLUME)  to 0(MAX VOLUME)\n", vol);
 
+#ifdef QCOM_VOIP
     if(msm_set_voice_rx_vol_ext(vol,session_id)) {
+#else
+    if(msm_set_voice_rx_vol(vol)) {
+#endif
         ALOGE("msm_set_voice_rx_vol(%d) failed errno = %d",vol,errno);
         return -1;
     }
@@ -1478,6 +1486,7 @@ static status_t do_route_audio_rpc(uint32_t device,
             //Enable TX device
            if(new_tx_device !=INVALID_DEVICE && (enableDevice(new_tx_device,1) == -1))
                return -1;
+#ifdef QCOM_VOIP
            voice_session_id = msm_get_voc_session(VOICE_SESSION_NAME);
            if(voice_session_id <=0) {
                 ALOGE("voice session invalid");
@@ -1485,6 +1494,10 @@ static status_t do_route_audio_rpc(uint32_t device,
            }
            msm_start_voice_ext(voice_session_id);
            msm_set_voice_tx_mute_ext(voice_session_mute,voice_session_id);
+#else
+           if (mic_mute == false)
+               msm_set_voice_tx_mute(0);
+#endif
 
            if(!isDeviceListEmpty())
                updateDeviceInfo(new_rx_device,new_tx_device);
@@ -1498,11 +1511,15 @@ static status_t do_route_audio_rpc(uint32_t device,
         if(temp == NULL)
             return 0;
 
+#ifdef QCOM_VOIP
         // Ending voice call
-        ALOGD("Ending Voice call");
+        LOGD("Ending Voice call");
         msm_end_voice_ext(voice_session_id);
         voice_session_id = 0;
         voice_session_mute = 0;
+#else
+        msm_end_voice();
+#endif
 
         if((temp->dev_id != INVALID_DEVICE && temp->dev_id_tx != INVALID_DEVICE)
 #ifdef QCOM_VOIP_ENABLED
@@ -2616,10 +2633,15 @@ ssize_t AudioHardware::AudioStreamOutDirect::write(const void* buffer, size_t by
             // voip calibration
             acdb_loader_send_voice_cal(ACDB_ID(cur_rx),ACDB_ID(cur_tx));
 #endif
+#ifdef QCOM_VOIP
             // start Voip call
             ALOGD("Starting voip call and UnMuting the call");
             msm_start_voice_ext(voip_session_id);
             msm_set_voice_tx_mute_ext(voip_session_mute,voip_session_id);
+#else
+            msm_start_voice();
+            msm_set_voice_tx_mute(0);
+#endif
             addToTable(0,cur_rx,cur_tx,VOIP_CALL,true);
         }
     }
@@ -2678,6 +2700,7 @@ status_t AudioHardware::AudioStreamOutDirect::standby()
     status_t status = NO_ERROR;
     int ret = 0;
 
+#ifdef QCOM_VOIP
     ALOGV(" AudioStreamOutDirect::standby mHardware->mNumVoipStreams = %d mFd = %d\n", mHardware->mNumVoipStreams, mFd);
     if (mFd >= 0 && (mHardware->mNumVoipStreams == 1)) {
         ret = msm_end_voice_ext(voip_session_id);
@@ -2707,6 +2730,7 @@ status_t AudioHardware::AudioStreamOutDirect::standby()
            voip_session_mute = 0;
        }
    }
+#endif
     mStandby = true;
     return status;
 }
@@ -3460,6 +3484,7 @@ status_t AudioHardware::AudioStreamInVoip::set(
            // voice calibration
            acdb_loader_send_voice_cal(ACDB_ID(cur_rx),ACDB_ID(cur_tx));
 #endif
+#ifdef QCOM_VOIP
            // start Voice call
            if(voip_session_id <= 0) {
                 voip_session_id = msm_get_voc_session(VOIP_SESSION_NAME);
@@ -3467,6 +3492,10 @@ status_t AudioHardware::AudioStreamInVoip::set(
            ALOGD("Starting voip call and UnMuting the call");
            msm_start_voice_ext(voip_session_id);
            msm_set_voice_tx_mute_ext(voip_session_mute,voip_session_id);
+#else
+           msm_start_voice();
+           msm_set_voice_tx_mute(0);
+#endif
            addToTable(0,cur_rx,cur_tx,VOIP_CALL,true);
     }
     mFormat =  *pFormat;
@@ -3580,6 +3609,7 @@ status_t AudioHardware::AudioStreamInVoip::standby()
     bool isDriverClosed = false;
     Routing_table* temp = NULL;
     if (!mHardware) return -1;
+#ifdef QCOM_VOIP
     ALOGV(" AudioStreamInVoip::standby = %d \n", mHardware->mNumVoipStreams);
     if (mState > AUDIO_INPUT_CLOSED && (mHardware->mNumVoipStreams == 1)) {
          ALOGE(" closing mvs driver\n");
@@ -3621,6 +3651,7 @@ status_t AudioHardware::AudioStreamInVoip::standby()
         }
         mState = AUDIO_INPUT_CLOSED;
     }
+#endif
     return NO_ERROR;
 }
 
