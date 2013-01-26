@@ -296,7 +296,8 @@ status_t  AudioHardwareALSA::setFmVolume(float value)
 
 status_t AudioHardwareALSA::setMasterVolume(float volume)
 {
-    return NO_ERROR;
+    /* Return error to allow software mixer */
+    return -1;
 }
 
 status_t AudioHardwareALSA::setMode(int mode)
