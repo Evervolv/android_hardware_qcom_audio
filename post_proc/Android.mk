@@ -30,8 +30,12 @@ LOCAL_C_INCLUDES := \
 	external/tinyalsa/include \
 	$(call include-path-for, audio-effects)
 
+LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
+LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
+
 LOCAL_HEADER_LIBRARIES += libhardware_headers
 LOCAL_HEADER_LIBRARIES += libsystem_headers
+
 include $(BUILD_SHARED_LIBRARY)
 endif
 
@@ -62,8 +66,14 @@ LOCAL_C_INCLUDES := \
         hardware/qcom/audio/hal \
 	$(call include-path-for, audio-effects)
 
+<<<<<<< HEAD
 LOCAL_HEADER_LIBRARIES += libhardware_headers
 LOCAL_HEADER_LIBRARIES += libsystem_headers
+=======
+LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
+LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
+
+>>>>>>> e8af63e... audio: Use kernel headers
 include $(BUILD_SHARED_LIBRARY)
 
 endif
